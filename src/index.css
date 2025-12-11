@@ -31,6 +31,14 @@ body {
   color: var(--text);
 }
 
+.container {
+  max-width: 1200px;
+  margin: 0 auto;     /* center */
+  padding-left: 16px; /* 16px */
+  padding-right: 16px;
+}
+
+
 /* Utility Classes */
 .bg-theme { background: var(--bg); }
 .bg-theme2 { background: var(--bg2); }

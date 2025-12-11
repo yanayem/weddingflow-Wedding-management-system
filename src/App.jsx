@@ -16,7 +16,7 @@ function App() {
     <Router>
       <ScrollToTop />
       <NavBar />
-      <ThemeToggle />
+    {/*  <ThemeToggle /> */}
 
       <Routes>
         <Route path="/" element={<Home />} />

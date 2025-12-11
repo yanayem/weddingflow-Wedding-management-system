@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+
 const MENU_ITEMS = [
   { name: "Home", path: "/" },
    { 
@@ -94,13 +95,13 @@ const NavBar = ({ ThemeToggle }) => {
         <div className="flex items-center gap-4">
           <Link
             to="/login"
-            className="bg-pink-500 p-2 rounded-xl font-bold text-gray-100 hover:bg-pink-600 transition text-sm md:text-base"
+            className="hidden md:block bg-pink-500 p-2 rounded-xl font-bold text-gray-100 hover:bg-pink-600 transition text-sm md:text-base"
           >
             Login
           </Link>
           {ThemeToggle && <ThemeToggle />}
           <button
-            className="md:hidden text-white text-2xl font-bold hover:text-rose-100 transition"
+            className="md:hidden mr-12 text-white text-2xl font-bold hover:text-rose-100 transition"
             onClick={() => setMobileMenu(!mobileMenu)}
           >
             ☰
