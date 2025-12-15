@@ -1,26 +1,39 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const Breadcrumb = ({ paths }) => {
+const Breadcrumb = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const pathnames = location.pathname.split("/").filter(Boolean);
+
+  const crumbs = [
+    { name: "Home", link: "/" },
+    ...pathnames.map((item, index) => {
+      const link = "/" + pathnames.slice(0, index + 1).join("/");
+      return {
+        name: item.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+        link,
+      };
+    }),
+  ];
+
+  if (location.pathname === "/") return null;
+
   return (
-    <nav className="text-gray-600 text-sm mb-4" aria-label="breadcrumb">
-      <ol className="flex items-center space-x-1">
-        {paths.map((path, index) => (
-          <li key={index} className="flex items-center">
-            <a
-              href={path.link}
-              className="hover:text-rose-500 transition-colors"
-            >
-              {path.name}
-            </a>
-            {index < paths.length - 1 && (
-              <FontAwesomeIcon icon={faAngleRight} className="mx-2" />
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <div className="max-w-7xl mx-auto px-4 py-3 text-sm text-gray-600">
+      {crumbs.map((c, i) => (
+        <span key={i}>
+          <button
+            onClick={() => navigate(c.link)}
+            className="hover:text-rose-500"
+          >
+            {c.name}
+          </button>
+          {i < crumbs.length - 1 && " / "}
+        </span>
+      ))}
+    </div>
   );
 };
 

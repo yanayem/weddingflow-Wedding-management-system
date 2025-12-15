@@ -30,7 +30,7 @@ const Vendor = () => {
       bgColor: "bg-rose-300",
       dropdownbg: "bg-rose-200",
       subcategories: [
-        { name: "Groom Photography", link: "/photography/groom" },
+        { name: "Groom Photography", link: "/Photography/groom" },
         { name: "Bride Photography", link: "/photography/bride" },
         { name: "Event Photography", link: "/photography/event" },
         { name: "Drone Photography", link: "/photography/drone" },
