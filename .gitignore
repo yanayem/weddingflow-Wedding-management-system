@@ -1,42 +1,13 @@
-# --- Node / React ---
 node_modules/
-dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# --- Environment Files ---
 .env
 .env.local
 .env.development
 .env.production
-
-# --- Django / Python ---
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.sqlite3
-db.sqlite3
-media/
-staticfiles/
-
-# --- Django Env ---
-.env.django
-*.env
-
-# --- Build / Cache ---
+.idea/
+dist/
+build/
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
 *.log
-*.pot
-*.pyc
-*.pyo
-*.pyd
-*.db
-*.sqlite3
-*.egg-info/
-.cache/
-.vscode/
-
-# --- OS Files ---
-.DS_Store
-Thumbs.db
