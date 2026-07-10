@@ -14,6 +14,11 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Log warning if config is missing
+if (!firebaseConfig.apiKey) {
+  console.warn("Firebase API Key is missing. Check your .env file.");
+}
+
 // Initialize Firebase (check if already initialized for HMR)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 

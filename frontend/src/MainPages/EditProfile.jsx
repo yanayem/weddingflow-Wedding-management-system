@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { storage } from "../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadImage } from "../lib/cloudinary";
+import { deleteUser } from "firebase/auth";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +29,8 @@ const EditProfile = () => {
         address: userData.address || "",
         bio: userData.bio || "",
         profilePic: userData.profilePic || "",
+        businessName: userData.businessName || "",
+        serviceType: userData.serviceType || "",
       });
     }
   }, [userData]);
@@ -46,16 +49,19 @@ const EditProfile = () => {
     }
 
     setUploading(true);
-    const storageRef = ref(storage, `profiles/${currentUser.uid}`);
 
     try {
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setForm({ ...form, profilePic: url });
-      toast.success("Image uploaded!");
+      const url = await uploadImage(file);
+
+      // Update locally and in DB immediately
+      setForm(prev => ({ ...prev, profilePic: url }));
+      await axios.put(`/api/users/${currentUser.uid}`, { ...form, profilePic: url });
+      await refreshUserData();
+
+      toast.success("Profile picture updated!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to upload image");
+      toast.error(err.message || "Failed to upload image");
     } finally {
       setUploading(false);
     }
@@ -64,13 +70,58 @@ const EditProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const updatePromise = axios.put(`/api/users/${currentUser.uid}`, form);
+
+    toast.promise(updatePromise, {
+      loading: "Updating profile...",
+      success: "Profile updated successfully!",
+      error: (err) => err.response?.data?.message || "Failed to update profile"
+    });
+
     try {
-      await axios.put(`/api/users/${currentUser.uid}`, form);
-      toast.success("Profile updated successfully!");
+      await updatePromise;
       if (refreshUserData) await refreshUserData();
       navigate("/profile");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update profile");
+      // Handled by toast.promise
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "Are you absolutely sure? This will permanently delete your account and all your data from our database. This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    setLoading(true);
+
+    const deletePromise = (async () => {
+      // 1. Delete from MongoDB
+      await axios.delete(`/api/users/${currentUser.uid}`);
+      // 2. Delete from Firebase
+      await deleteUser(currentUser);
+    })();
+
+    toast.promise(deletePromise, {
+      loading: "Deleting account...",
+      success: "Account deleted successfully.",
+      error: (err) => {
+        if (err.code === "auth/requires-recent-login") {
+          return "For security, please logout and login again before deleting your account.";
+        }
+        return err.response?.data?.message || "Failed to delete account";
+      }
+    });
+
+    try {
+      await deletePromise;
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -141,6 +192,33 @@ const EditProfile = () => {
             </div>
           </div>
 
+          {userData?.role === 'vendor' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-rose-50/50 border border-rose-100">
+               <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase text-rose-400 ml-1 tracking-widest">Business Name</label>
+                  <input
+                    name="businessName"
+                    className="w-full p-4 bg-white border border-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400 font-bold text-sm"
+                    value={form.businessName}
+                    onChange={handleChange}
+                    placeholder="Your Brand Name"
+                  />
+               </div>
+               <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase text-rose-400 ml-1 tracking-widest">Service Type</label>
+                  <select
+                    name="serviceType"
+                    className="w-full p-4 bg-white border border-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400 font-bold text-sm text-gray-700"
+                    value={form.serviceType}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Category</option>
+                    {["Photography", "Caterers", "Makeup Artists", "Decorators", "Musicians / DJs", "Venues", "Invitations / Print", "Transport", "Wedding Planners"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+               </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Bio</label>
             <textarea
@@ -170,6 +248,24 @@ const EditProfile = () => {
             </button>
           </div>
         </form>
+
+        {/* Danger Zone */}
+        <div className="mt-20 pt-10 border-t border-gray-100">
+          <h3 className="text-lg font-black text-rose-600 uppercase tracking-tighter italic mb-4">Danger Zone</h3>
+          <div className="bg-rose-50 p-6 border border-rose-100 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <p className="text-sm font-bold text-gray-900 uppercase">Delete Account</p>
+              <p className="text-xs text-rose-400 font-medium">Once you delete your account, there is no going back. Please be certain.</p>
+            </div>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={loading}
+              className="w-full md:w-auto bg-white border-2 border-rose-200 text-rose-600 px-8 py-3 font-black uppercase tracking-widest text-[10px] hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+            >
+              Permanently Delete My Account
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

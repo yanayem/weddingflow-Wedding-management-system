@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import Home from "./MainPages/Home";
-import LogIN from "./ChildPage/Auth/login";
-import SignUp from "./ChildPage/Auth/SignUp";
+import LoginSelection from "./ChildPage/Auth/LoginSelection";
+import AuthPage from "./ChildPage/Auth/AuthPage";
+import ForgotPassword from "./ChildPage/Auth/ForgotPassword";
 import Vendor from "./MainPages/Vendor";
 import WeddingPlanner from "./MainPages/WeddingPlanner";
 import VendorList from "./MainPages/VendorList";
@@ -13,6 +14,7 @@ import ContactSection from "./ChildPage/ContactSection";
 import Footer from "./ChildPage/Footer";
 import NavBar from "./ChildPage/NavBar";
 import VendorNavBar from "./ChildPage/VendorNavBar";
+import AdminNavBar from "./ChildPage/AdminNavBar";
 import ScrollToTop from "./ChildPage/ScrollToTop";
 import Breadcrumb from "./ChildPage/Breadcrumb";
 import Profile from "./MainPages/Profile";
@@ -20,6 +22,7 @@ import EditProfile from "./MainPages/EditProfile";
 import VendorDetails from "./MainPages/VendorDetails";
 import VendorProfileEditor from "./MainPages/VendorProfileEditor";
 import VendorDashboard from "./MainPages/VendorDashboard";
+import AdminDashboard from "./MainPages/AdminDashboard";
 
 import GroomPhotography from "./ChildPage/Vendor/Photography/GroomPhotography";
 import BridePhotography from "./ChildPage/Vendor/Photography/BridePhotography";
@@ -36,20 +39,45 @@ const ProtectedRoute = ({ children, role }) => {
 };
 
 const Navigation = () => {
-  const location = useLocation();
   const { userData } = useAuth();
 
-  // Routes where we want to show the Vendor Navigation
-  const vendorRoutes = ["/vendor-dashboard", "/vendor-profile-setup", "/edit-profile"];
-
-  // If the user is a vendor and is on one of the vendor routes OR the profile (bookings) page
-  const isVendorPath = vendorRoutes.includes(location.pathname) || (location.pathname === "/profile" && userData?.role === 'vendor');
-
-  if (userData?.role === 'vendor' && isVendorPath) {
+  // If the user is a vendor, show Vendor Navigation everywhere
+  if (userData?.role === 'vendor') {
     return <VendorNavBar />;
   }
 
+  // If the user is an admin, show Admin Navigation everywhere
+  if (userData?.role === 'admin') {
+    return <AdminNavBar />;
+  }
+
   return <NavBar />;
+};
+
+const AuthRoute = ({ children }) => {
+  const { currentUser, userData, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-10 w-10 border-4 border-rose-500 border-t-transparent rounded-full"></div></div>;
+
+  if (currentUser) {
+    if (userData?.role === 'vendor') return <Navigate to="/vendor-dashboard" replace />;
+    if (userData?.role === 'admin') return <Navigate to="/admin" replace />;
+    return <Navigate to="/profile" replace />;
+  }
+
+  return children;
+};
+
+
+const ConditionalFooter = () => {
+  const location = useLocation();
+  const authRoutes = ["/login", "/signup", "/vendor-auth", "/forgot-password"];
+
+  if (authRoutes.includes(location.pathname)) {
+    return null;
+  }
+
+  return <Footer />;
 };
 
 function App() {
@@ -68,51 +96,45 @@ function App() {
         {/* Main Content */}
         <main className="flex-grow">
           <Routes>
-            {/* Core Pages */}
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LogIN />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<AuthRoute><AuthPage initialRole="user" /></AuthRoute>} />
+            <Route path="/signup" element={<AuthRoute><AuthPage initialRole="user" /></AuthRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/vendor-auth" element={<AuthRoute><AuthPage initialRole="vendor" /></AuthRoute>} />
+
+            <Route path="/vendor" element={<Vendor />} />
+            <Route path="/vendor/:category" element={<VendorList />} />
+            <Route path="/vendor/:category/:subcategory" element={<VendorList />} />
+            <Route path="/vendor-details/:id" element={<VendorDetails />} />
+
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/wedding-planner" element={<WeddingPlanner />} />
+            <Route path="/about" element={<AboutMe />} />
+            <Route path="/contact" element={<ContactSection />} />
+
+            {/* Sub-category routes for Vendors */}
+            <Route path="/vendor/groom-photography" element={<GroomPhotography />} />
+            <Route path="/vendor/bride-photography" element={<BridePhotography />} />
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
 
             {/* Protected Vendor Routes */}
-            <Route path="/vendor-profile-setup" element={<ProtectedRoute role="vendor"><VendorProfileEditor /></ProtectedRoute>} />
             <Route path="/vendor-dashboard" element={<ProtectedRoute role="vendor"><VendorDashboard /></ProtectedRoute>} />
+            <Route path="/vendor-profile-setup" element={<ProtectedRoute role="vendor"><VendorProfileEditor /></ProtectedRoute>} />
 
-            <Route path="/about" element={<AboutMe />} />
-            <Route path="/contact" element={<ContactSection />} />
+            {/* Protected Admin Routes */}
+            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
 
-            {/* Vendor Main & Specific Sub-pages */}
-            <Route path="/vendor" element={<Vendor />} />
-            <Route path="/vendor/details/:id" element={<VendorDetails />} />
-
-            {/* Specific components for certain vendor types */}
-            <Route path="/vendor/groom-photography" element={<GroomPhotography />} />
-            <Route path="/vendor/bride-photography" element={<BridePhotography />} />
-
-            {/* Specific components for Wedding Planners */}
-            <Route path="/vendor/full-service-planner" element={<WeddingPlanner />} />
-            <Route path="/vendor/day-of-coordinator" element={<WeddingPlanner />} />
-            <Route path="/vendor/budget-planner" element={<WeddingPlanner />} />
-            <Route path="/vendor/destination-planner" element={<WeddingPlanner />} />
-
-            {/* Fallback for other Vendor categories */}
-            <Route path="/vendor/:subcategory" element={<VendorList />} />
-
-            {/* Event Pages */}
-            <Route path="/events" element={<Events />} />
-            <Route path="/events/:subcategory" element={<VendorList />} />
-
-            {/* Catch-all dynamic route */}
-            <Route path="/:category/:subcategory" element={<VendorList />} />
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
 
         {/* Footer stays at bottom */}
-        <Footer />
+        <ConditionalFooter />
       </div>
     </Router>
   );

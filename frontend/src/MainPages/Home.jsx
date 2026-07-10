@@ -77,7 +77,7 @@ const Home = () => {
           <p className="text-xl text-gray-600 mb-12 font-normal max-w-2xl mx-auto opacity-80">
             Join the elite network of vendors on WeddingFlow and reach thousands of couples planning their special day right now.
           </p>
-          <Link to="/signup">
+          <Link to="/vendor-auth?signup=true">
             <button className="px-12 py-5 bg-pink-500 hover:bg-pink-600 text-white rounded-full text-xl font-black shadow-xl hover:scale-105 transition-all duration-300 shadow-pink-500/30">
                 Register as a Vendor
             </button>

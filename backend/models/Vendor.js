@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
 const vendorSchema = new mongoose.Schema({
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  businessName: { type: String, required: true },
-  category: { type: String, required: true }, // e.g., Photography, Venue
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+  businessName: { type: String, required: true, trim: true },
+  category: { type: String, required: true, index: true }, // e.g., Photography, Venue
+  subcategories: [{ type: String, index: true }], // e.g., ["Groom Photography", "Bride Photography"]
   description: { type: String },
   address: { type: String },
   phone: { type: String },

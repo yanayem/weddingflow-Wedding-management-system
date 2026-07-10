@@ -44,12 +44,29 @@ const NavBar = () => {
   const navigate = useNavigate();
   const { currentUser, userData } = useAuth();
 
+  // Dynamic Menu Items based on Role
+  const getMenuItems = () => {
+    let items = [...MENU_ITEMS];
+
+    // Add specific dashboard link if logged in
+    if (userData?.role === 'admin') {
+      items.push({ name: "Admin Panel", path: "/admin" });
+    } else if (userData?.role === 'vendor') {
+      items.push({ name: "Dashboard", path: "/vendor-dashboard" });
+    }
+
+    return items;
+  };
+
+  const navItems = getMenuItems();
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast.success("Signed out successfully");
       navigate("/");
     } catch (error) {
+      console.error("Logout error:", error);
       toast.error("Sign out failed");
     }
   };
@@ -70,7 +87,7 @@ const NavBar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-6">
-          {MENU_ITEMS.map((item, idx) => (
+          {navItems.map((item, idx) => (
             <div
               key={idx}
               className="relative group"
@@ -89,12 +106,19 @@ const NavBar = () => {
                 <div className="absolute top-full left-0 mt-2 w-[600px] bg-white text-gray-800 shadow-2xl p-6 grid grid-cols-3 gap-6 animate-slideDown border border-rose-50">
                    {item.sub.map((cat, cIdx) => (
                      <div key={cIdx}>
-                        <h4 className="font-black text-rose-500 uppercase text-[10px] mb-3 border-b border-rose-50 pb-1">{cat.category}</h4>
+                        <Link
+                          to={`${item.path}/${cat.category.toLowerCase()}`}
+                          onClick={() => setActiveDropdown(null)}
+                          className="block font-black text-rose-500 uppercase text-[10px] mb-3 border-b border-rose-50 pb-1 hover:text-rose-700 transition-colors"
+                        >
+                          {cat.category}
+                        </Link>
                         <div className="flex flex-col gap-2">
                            {cat.items.map((sub, sIdx) => (
                              <Link
                                 key={sIdx}
-                                to={`${item.path}/${sub.replace(/\s+/g, "-").toLowerCase()}`}
+                                to={`${item.path}/${cat.category.toLowerCase()}/${sub.replace(/\s+/g, "-").toLowerCase()}`}
+                                onClick={() => setActiveDropdown(null)}
                                 className="text-xs font-semibold hover:text-rose-500 transition-colors"
                              >
                                {sub}
@@ -114,9 +138,9 @@ const NavBar = () => {
           {currentUser ? (
             <div className="flex items-center gap-3 bg-white/10 p-1 pl-4 border border-white/20">
                <span className="text-[10px] font-black uppercase tracking-widest">Hi, {userData?.name || "User"}</span>
-               <Link to={userData?.role === 'vendor' ? "/vendor-dashboard" : "/profile"}>
+               <Link to={userData?.role === 'admin' ? "/admin" : (userData?.role === 'vendor' ? "/vendor-dashboard" : "/profile")}>
                   <button className="text-[10px] font-black uppercase px-3 py-1.5 hover:bg-white/20">
-                    {userData?.role === 'vendor' ? "Dashboard" : "Profile"}
+                    {userData?.role === 'admin' ? "Admin" : (userData?.role === 'vendor' ? "Dashboard" : "Profile")}
                   </button>
                </Link>
                <button onClick={handleLogout} className="bg-white text-pink-500 text-[10px] font-black uppercase px-4 py-1.5 shadow-lg">Logout</button>
@@ -138,7 +162,7 @@ const NavBar = () => {
       {openNav && (
         <div className="lg:hidden absolute top-full left-0 w-full bg-pink-600 p-4 border-t border-pink-400 shadow-2xl animate-slideDown">
           <div className="flex flex-col gap-2">
-            {MENU_ITEMS.map((item, idx) => (
+            {navItems.map((item, idx) => (
               <Link key={idx} to={item.path} onClick={() => setOpenNav(false)} className="py-3 px-4 font-bold uppercase tracking-widest text-sm hover:bg-white/10">
                 {item.name}
               </Link>

@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { storage } from "../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadImage } from "../lib/cloudinary";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+
+const CATEGORY_MAP = {
+  "Photography": ["Groom Photography", "Bride Photography", "Event Photography", "Drone Photography", "Pre-Wedding Shoot"],
+  "Caterers": ["Buffet", "Desserts", "Drinks", "Custom Cakes", "Food Trucks"],
+  "Makeup Artists": ["Bridal Makeup", "Family Makeup", "Groom Makeup", "Hair Styling"],
+  "Decorators": ["Stage Decor", "Floral Decor", "Lighting", "Table Setup", "Theme Decor"],
+  "Musicians / DJs": ["Live Bands", "DJ Services", "Solo Performers", "Classical Music"],
+  "Venues": ["Banquet Halls", "Hotels", "Outdoor Gardens", "Beach Weddings"],
+  "Invitations / Print": ["Wedding Cards", "Save the Date", "Thank You Cards", "Custom Printing"],
+  "Transport": ["Luxury Cars", "Limousines", "Shuttle Services", "Vintage Cars"],
+  "Wedding Planners": ["Full-Service Planner", "Day-of Coordinator", "Budget Planner", "Destination Planner"],
+};
 
 const VendorProfileEditor = () => {
   const { currentUser, userData } = useAuth();
@@ -16,6 +28,7 @@ const VendorProfileEditor = () => {
   const [form, setForm] = useState({
     businessName: "",
     category: "Photography",
+    subcategories: [],
     description: "",
     address: "",
     phone: "",
@@ -35,6 +48,7 @@ const VendorProfileEditor = () => {
           setForm({
             businessName: res.data.businessName || "",
             category: res.data.category || "Photography",
+            subcategories: res.data.subcategories || [],
             description: res.data.description || "",
             address: res.data.address || "",
             phone: res.data.phone || "",
@@ -52,7 +66,27 @@ const VendorProfileEditor = () => {
   }, [currentUser, userData]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "category") {
+      setForm({
+        ...form,
+        category: value,
+        subcategories: []
+      });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+  };
+
+  const handleSubcategoryToggle = (sub) => {
+    setForm(prev => {
+      const exists = prev.subcategories.includes(sub);
+      if (exists) {
+        return { ...prev, subcategories: prev.subcategories.filter(s => s !== sub) };
+      } else {
+        return { ...prev, subcategories: [...prev.subcategories, sub] };
+      }
+    });
   };
 
   const handleFileUpload = async (e) => {
@@ -68,15 +102,13 @@ const VendorProfileEditor = () => {
           toast.error(`${file.name} is too large (>3MB)`);
           continue;
         }
-        const storageRef = ref(storage, `vendors/${currentUser.uid}/${Date.now()}-${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        const url = await uploadImage(file);
         uploadedUrls.push(url);
       }
       setForm(prev => ({ ...prev, images: [...prev.images, ...uploadedUrls] }));
       toast.success(`${uploadedUrls.length} images uploaded!`);
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(err.message || "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -92,15 +124,23 @@ const VendorProfileEditor = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const savePromise = axios.post("/api/vendors", {
+      uid: currentUser.uid,
+      ...form,
+    });
+
+    toast.promise(savePromise, {
+      loading: "Saving business profile...",
+      success: "Business profile saved successfully!",
+      error: (err) => err.response?.data?.message || "Failed to save profile"
+    });
+
     try {
-      await axios.post("/api/vendors", {
-        uid: currentUser.uid,
-        ...form,
-      });
-      toast.success("Business profile saved!");
+      await savePromise;
       navigate("/vendor-dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save profile");
+      // Handled by toast.promise
     } finally {
       setLoading(false);
     }
@@ -125,9 +165,26 @@ const VendorProfileEditor = () => {
             <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Category</label>
                 <select name="category" className="w-full p-4 bg-gray-50 border border-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400 font-bold text-sm text-gray-700" value={form.category} onChange={handleChange}>
-                    {["Photography", "Caterers", "Makeup Artists", "Decorators", "Musicians / DJs", "Venues", "Invitations / Print", "Transport", "Wedding Planners"].map(opt => <option key={opt}>{opt}</option>)}
+                    {Object.keys(CATEGORY_MAP).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Sub-Categories (Select all that apply)</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-50 border border-gray-100">
+                  {CATEGORY_MAP[form.category]?.map(opt => (
+                    <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 accent-pink-500"
+                        checked={form.subcategories.includes(opt)}
+                        onChange={() => handleSubcategoryToggle(opt)}
+                      />
+                      <span className="text-xs font-bold text-gray-600 group-hover:text-pink-500 transition-colors">{opt}</span>
+                    </label>
+                  ))}
+              </div>
           </div>
 
           <div className="flex flex-col gap-1">

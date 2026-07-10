@@ -9,17 +9,19 @@ const router = express.Router();
 // Get all vendors with filters
 router.get('/', async (req, res) => {
   try {
-    const { category, location, minPrice, maxPrice, search } = req.query;
+    const { category, subcategory, location, minPrice, maxPrice, search } = req.query;
 
     let query = {};
 
     if (category) query.category = { $regex: category, $options: 'i' };
+    if (subcategory) query.subcategories = { $in: [new RegExp(subcategory, 'i')] };
     if (location) query.address = { $regex: location, $options: 'i' };
 
     if (search) {
       query.$or = [
         { businessName: { $regex: search, $options: 'i' } },
         { category: { $regex: search, $options: 'i' } },
+        { subcategories: { $in: [new RegExp(search, 'i')] } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
@@ -88,7 +90,7 @@ router.get('/stats/:uid', async (req, res) => {
 // Create/Update vendor profile (Owner only)
 router.post('/', async (req, res) => {
   try {
-    const { uid, businessName, category, description, address, phone, images, pricing } = req.body;
+    const { uid, businessName, category, subcategories, description, address, phone, images, pricing } = req.body;
 
     const user = await User.findOne({ uid });
     if (!user || user.role !== 'vendor') {
@@ -101,6 +103,7 @@ router.post('/', async (req, res) => {
       // Update
       vendor.businessName = businessName || vendor.businessName;
       vendor.category = category || vendor.category;
+      vendor.subcategories = subcategories || vendor.subcategories;
       vendor.description = description || vendor.description;
       vendor.address = address || vendor.address;
       vendor.phone = phone || vendor.phone;
@@ -112,6 +115,7 @@ router.post('/', async (req, res) => {
         owner: user._id,
         businessName,
         category,
+        subcategories,
         description,
         address,
         phone,

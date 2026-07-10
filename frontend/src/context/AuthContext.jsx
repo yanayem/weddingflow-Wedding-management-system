@@ -10,13 +10,32 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserData = async (uid) => {
+  const fetchUserData = async (user) => {
+    if (!user) return null;
     try {
-      const res = await axios.get(`/api/users/${uid}`);
+      // Try to get user from Mongo
+      let res = await axios.get(`/api/users/${user.uid}`);
       setUserData(res.data);
       return res.data;
     } catch (err) {
-      console.error("Error fetching user data", err);
+      if (err.response?.status === 404) {
+        // User exists in Firebase but not in Mongo (e.g. first time Google Login)
+        // Auto-register them in MongoDB
+        try {
+          const newUser = {
+            uid: user.uid,
+            name: user.displayName || "New User",
+            email: user.email,
+            role: "user", // Default role
+            profilePic: user.photoURL || ""
+          };
+          const registerRes = await axios.post("/api/users/register", newUser);
+          setUserData(registerRes.data);
+          return registerRes.data;
+        } catch (regErr) {
+          console.error("Auto-registration failed", regErr);
+        }
+      }
       setUserData(null);
       return null;
     }
@@ -26,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        await fetchUserData(user.uid);
+        await fetchUserData(user);
       } else {
         setUserData(null);
       }
@@ -40,7 +59,12 @@ export const AuthProvider = ({ children }) => {
     currentUser,
     userData,
     loading,
-    refreshUserData: () => fetchUserData(currentUser?.uid),
+    refreshUserData: async () => {
+      if (auth.currentUser) {
+        return await fetchUserData(auth.currentUser);
+      }
+      return null;
+    },
     setUserData // Allow manual updates
   };
 

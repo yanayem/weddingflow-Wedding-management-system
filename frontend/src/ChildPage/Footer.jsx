@@ -45,7 +45,12 @@ const Footer = () => {
           <ul className="flex flex-col gap-4 text-sm">
             <li><Link to="/" className="hover:text-rose-400 transition">Home</Link></li>
             <li><Link to="/events" className="hover:text-rose-400 transition">Events</Link></li>
-            <li><Link to="/vendor" className="hover:text-rose-400 transition">Vendors</Link></li>
+            {import.meta.env.VITE_DISABLE_VENDOR_SERVICES !== 'true' && (
+              <>
+                <li><Link to="/vendor" className="hover:text-rose-400 transition">Vendors</Link></li>
+                <li><Link to="/vendor-auth" className="text-rose-400 font-bold hover:underline transition">Vendor Portal</Link></li>
+              </>
+            )}
             <li><Link to="/gallery" className="hover:text-rose-400 transition">Gallery</Link></li>
           </ul>
         </div>

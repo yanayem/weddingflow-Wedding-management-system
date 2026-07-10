@@ -68,7 +68,7 @@ const sampleVendors = [
 
 const seedDB = async () => {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, { dbName: 'weddingflow' });
     console.log("Connected to MongoDB for seeding...");
 
     // Clear existing

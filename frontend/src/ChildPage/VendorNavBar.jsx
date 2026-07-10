@@ -26,6 +26,7 @@ const VendorNavBar = () => {
       toast.success("Signed out successfully");
       navigate("/");
     } catch (error) {
+      console.error("Logout error:", error);
       toast.error("Sign out failed");
     }
   };

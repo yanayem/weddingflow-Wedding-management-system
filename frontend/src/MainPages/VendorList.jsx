@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar, faMapMarkerAlt, faFilter, faSearch } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const VendorList = () => {
   const { category, subcategory } = useParams();
@@ -22,7 +23,8 @@ const VendorList = () => {
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      let url = `/api/vendors?category=${initialTitle}`;
+      let url = `/api/vendors?category=${formatTitle(category)}`;
+      if (subcategory) url += `&subcategory=${formatTitle(subcategory)}`;
       if (location) url += `&location=${location}`;
       if (searchTerm) url += `&search=${searchTerm}`;
 
@@ -30,6 +32,7 @@ const VendorList = () => {
       setVendors(res.data);
     } catch (err) {
       console.error("Error fetching vendors", err);
+      toast.error("Failed to fetch vendors. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -129,7 +132,7 @@ const VendorList = () => {
                     <span className="font-black uppercase text-[10px] tracking-widest text-gray-300">Starting at</span>
                     <span className="text-pink-500 font-black text-2xl tracking-tighter italic">{vendor.pricing || "TBD"}</span>
                 </div>
-                <Link to={`/vendor/details/${vendor._id}`}>
+                <Link to={`/vendor-details/${vendor._id}`}>
                     <button className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-pink-500/10">
                         View
                     </button>
