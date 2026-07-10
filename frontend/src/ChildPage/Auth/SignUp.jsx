@@ -40,7 +40,7 @@ const SignUp = () => {
       };
 
       try {
-        await axios.post("http://localhost:5000/api/users/register", userData);
+        await axios.post("/api/users/register", userData);
         await refreshUserData();
         toast.success(`Account created with Google as ${form.role}!`);
       } catch (err) {

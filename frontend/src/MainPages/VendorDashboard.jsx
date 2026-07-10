@@ -13,7 +13,7 @@ const VendorDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/vendors/stats/${currentUser.uid}`);
+        const res = await axios.get(`/api/vendors/stats/${currentUser.uid}`);
         setStats(res.data);
       } catch (err) {
         console.error("Error fetching stats", err);

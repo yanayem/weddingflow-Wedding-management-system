@@ -45,7 +45,7 @@ const LogIN = () => {
       if (!userData) {
         const newUser = { uid: user.uid, name: user.displayName, email: user.email, role: "user" };
         const axios = (await import("axios")).default;
-        await axios.post("http://localhost:5000/api/users/register", newUser);
+        await axios.post("/api/users/register", newUser);
         await refreshUserData();
       }
       navigate("/");

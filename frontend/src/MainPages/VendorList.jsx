@@ -22,7 +22,7 @@ const VendorList = () => {
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:5000/api/vendors?category=${initialTitle}`;
+      let url = `/api/vendors?category=${initialTitle}`;
       if (location) url += `&location=${location}`;
       if (searchTerm) url += `&search=${searchTerm}`;
 

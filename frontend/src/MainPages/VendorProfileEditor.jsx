@@ -30,7 +30,7 @@ const VendorProfileEditor = () => {
         return;
       }
       try {
-        const res = await axios.get(`http://localhost:5000/api/vendors/owner/${currentUser.uid}`);
+        const res = await axios.get(`/api/vendors/owner/${currentUser.uid}`);
         if (res.data) {
           setForm({
             businessName: res.data.businessName || "",
@@ -93,7 +93,7 @@ const VendorProfileEditor = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/vendors", {
+      await axios.post("/api/vendors", {
         uid: currentUser.uid,
         ...form,
       });

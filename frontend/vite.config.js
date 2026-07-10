@@ -5,7 +5,12 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  build: {
-    outDir: 'build', // Vercel expects 'build' by default
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
 });

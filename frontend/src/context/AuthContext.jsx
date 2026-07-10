@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserData = async (uid) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/users/${uid}`);
+      const res = await axios.get(`/api/users/${uid}`);
       setUserData(res.data);
       return res.data;
     } catch (err) {

@@ -13,8 +13,8 @@ const Profile = () => {
     if (!currentUser || !userData) return;
     try {
       const endpoint = userData.role === 'vendor'
-        ? `http://localhost:5000/api/bookings/vendor/${currentUser.uid}`
-        : `http://localhost:5000/api/bookings/user/${currentUser.uid}`;
+        ? `/api/bookings/vendor/${currentUser.uid}`
+        : `/api/bookings/user/${currentUser.uid}`;
 
       const res = await axios.get(endpoint);
       setBookings(res.data);
@@ -33,7 +33,7 @@ const Profile = () => {
 
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/bookings/${bookingId}/status`, { status: newStatus });
+      await axios.patch(`/api/bookings/${bookingId}/status`, { status: newStatus });
       toast.success(`Booking ${newStatus}!`);
       fetchBookings();
     } catch (err) {

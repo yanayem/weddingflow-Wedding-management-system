@@ -65,7 +65,7 @@ const EditProfile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/api/users/${currentUser.uid}`, form);
+      await axios.put(`/api/users/${currentUser.uid}`, form);
       toast.success("Profile updated successfully!");
       if (refreshUserData) await refreshUserData();
       navigate("/profile");

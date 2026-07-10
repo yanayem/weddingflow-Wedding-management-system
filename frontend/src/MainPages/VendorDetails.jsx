@@ -27,8 +27,8 @@ const VendorDetails = () => {
   const fetchData = async () => {
     try {
       const [vendorRes, reviewsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/vendors/${id}`),
-        axios.get(`http://localhost:5000/api/reviews/${id}`)
+        axios.get(`/api/vendors/${id}`),
+        axios.get(`/api/reviews/${id}`)
       ]);
       setVendor(vendorRes.data);
       setReviews(reviewsRes.data);
@@ -54,7 +54,7 @@ const VendorDetails = () => {
 
     setSubmittingBooking(true);
     try {
-      await axios.post("http://localhost:5000/api/bookings", {
+      await axios.post("/api/bookings", {
         uid: currentUser.uid,
         vendorId: id,
         eventDate: bookingDate,
@@ -79,7 +79,7 @@ const VendorDetails = () => {
 
     setSubmittingReview(true);
     try {
-      await axios.post("http://localhost:5000/api/reviews", {
+      await axios.post("/api/reviews", {
         uid: currentUser.uid,
         vendorId: id,
         rating,
