@@ -56,12 +56,19 @@ const Profile = () => {
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{userData?.name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {userData?.role === 'vendor' && userData?.businessName ? userData.businessName : userData?.name}
+            </h1>
             <p className="text-gray-500">{userData?.email}</p>
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="inline-block px-3 py-1 bg-rose-100 text-rose-600 text-xs font-bold uppercase tracking-wider">
-                {userData?.role}
+                {userData?.role} {userData?.serviceType ? `| ${userData.serviceType}` : ''}
               </span>
+              {userData?.role === 'vendor' && userData?.businessName && (
+                <span className="inline-block px-3 py-1 bg-pink-50 text-pink-500 text-xs font-bold uppercase">
+                  Owner: {userData.name}
+                </span>
+              )}
               {userData?.phone && (
                 <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold">
                   {userData.phone}
