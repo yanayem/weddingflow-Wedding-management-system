@@ -10,7 +10,6 @@ const LogIN = () => {
   const { refreshUserData } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -21,13 +20,8 @@ const LogIN = () => {
       await signInWithEmailAndPassword(auth, email, password);
       const userData = await refreshUserData();
 
-      if (userData?.role !== role && role !== 'admin') {
-        toast.error(`Access denied. Registered as ${userData?.role || 'different role'}`);
-        return;
-      }
-
       toast.success("Welcome back!");
-      navigate(userData.role === "vendor" ? "/vendor-dashboard" : "/");
+      navigate(userData?.role === "vendor" ? "/vendor-dashboard" : "/");
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -40,15 +34,17 @@ const LogIN = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      const userData = await refreshUserData();
+      let userData = await refreshUserData();
 
       if (!userData) {
         const newUser = { uid: user.uid, name: user.displayName, email: user.email, role: "user" };
         const axios = (await import("axios")).default;
-        await axios.post("/api/users/register", newUser);
+        const res = await axios.post("/api/users/register", newUser);
+        userData = res.data;
         await refreshUserData();
       }
-      navigate("/");
+
+      navigate(userData?.role === "vendor" ? "/vendor-dashboard" : "/");
     } catch (error) {
       toast.error("Google Login failed");
     } finally {
@@ -61,19 +57,6 @@ const LogIN = () => {
       <div className="bg-white p-10 shadow-2xl w-full max-w-md border border-rose-100">
         <h2 className="text-3xl font-black text-gray-900 text-center uppercase tracking-tighter">Login</h2>
         <p className="text-gray-500 text-center mb-8">Enter your details to sign in.</p>
-
-        {/* Role Tabs */}
-        <div className="flex bg-gray-100 p-1 mb-6">
-          {["user", "vendor", "admin"].map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`flex-1 py-2 text-xs font-bold uppercase transition-all ${role === r ? "bg-white text-pink-500 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
