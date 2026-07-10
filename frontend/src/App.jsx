@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import Home from "./MainPages/Home";
 import LogIN from "./ChildPage/Auth/login";
@@ -24,6 +24,16 @@ import VendorDashboard from "./MainPages/VendorDashboard";
 import GroomPhotography from "./ChildPage/Vendor/Photography/GroomPhotography";
 import BridePhotography from "./ChildPage/Vendor/Photography/BridePhotography";
 import { useAuth } from "./context/AuthContext";
+
+const ProtectedRoute = ({ children, role }) => {
+  const { currentUser, userData, loading } = useAuth();
+
+  if (loading) return <div className="p-20 text-center font-bold text-rose-500">Loading...</div>;
+  if (!currentUser) return <Navigate to="/login" />;
+  if (role && userData?.role !== role) return <Navigate to="/" />;
+
+  return children;
+};
 
 const Navigation = () => {
   const location = useLocation();
@@ -63,10 +73,15 @@ function App() {
             <Route path="/login" element={<LogIN />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/gallery" element={<Gallery />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/edit-profile" element={<EditProfile />} />
-            <Route path="/vendor-profile-setup" element={<VendorProfileEditor />} />
-            <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+
+            {/* Protected User Routes */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+
+            {/* Protected Vendor Routes */}
+            <Route path="/vendor-profile-setup" element={<ProtectedRoute role="vendor"><VendorProfileEditor /></ProtectedRoute>} />
+            <Route path="/vendor-dashboard" element={<ProtectedRoute role="vendor"><VendorDashboard /></ProtectedRoute>} />
+
             <Route path="/about" element={<AboutMe />} />
             <Route path="/contact" element={<ContactSection />} />
 

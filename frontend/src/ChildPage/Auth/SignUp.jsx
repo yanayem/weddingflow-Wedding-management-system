@@ -40,16 +40,16 @@ const SignUp = () => {
       };
 
       try {
-        await axios.post("/api/users/register", userData);
+        const res = await axios.post("/api/users/register", userData);
         await refreshUserData();
-        toast.success(`Account created with Google as ${form.role}!`);
-      } catch (err) {
-        if (err.response && err.response.status === 400) {
-          await refreshUserData();
-          toast.success("Welcome back! Logging you in.");
+
+        if (res.status === 200) {
+          toast.success("Welcome back! Signed in with Google.");
         } else {
-          throw err;
+          toast.success(`Account created with Google as ${form.role}!`);
         }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Registration failed");
       }
       navigate(form.role === "vendor" ? "/vendor-dashboard" : "/");
     } catch (error) {
@@ -82,7 +82,7 @@ const SignUp = () => {
         serviceType: form.role === 'vendor' ? form.serviceType : undefined,
       };
 
-      await axios.post("http://localhost:5000/api/users/register", userData);
+      await axios.post("/api/users/register", userData);
       await refreshUserData();
 
       toast.success(`Registration successful as ${form.role}!`);

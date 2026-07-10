@@ -11,7 +11,9 @@ router.post('/register', async (req, res) => {
     let user = await User.findOne({ uid });
 
     if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+      // If user exists, we might want to update some fields or just return it
+      // For now, let's just return the existing user to avoid 400 errors on re-registration attempts (e.g. Google Login)
+      return res.status(200).json(user);
     }
 
     user = new User({
@@ -44,10 +46,10 @@ router.get('/:uid', async (req, res) => {
 // Update user profile
 router.put('/:uid', async (req, res) => {
   try {
-    const { name, phone, address, bio, profilePic } = req.body;
+    const { name, phone, address, bio, profilePic, businessName, serviceType } = req.body;
     const user = await User.findOneAndUpdate(
       { uid: req.params.uid },
-      { name, phone, address, bio, profilePic },
+      { name, phone, address, bio, profilePic, businessName, serviceType },
       { new: true }
     );
     if (!user) return res.status(404).json({ message: 'User not found' });
